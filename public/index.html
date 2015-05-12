@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
 <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
 <script src="js/angular-resource.js"></script>
 <script src="app.js"></script>
@@ -13,10 +13,9 @@
 
 <h3>Click within the box to begin booping</h3>
 
-<div id="outer">
+<div id="outer" ng-app="catboop" ng-controller="imgCtrl">
     <div id="catFrame">
-        <img id="catImg" src="http://tonsofcats.com/wp-content/uploads/2013/10/l-Derpy-aww-550x486.jpg"
-             style="height:100%;margin:0px -10px;"/>
+        <img id="catImg" src="" style="display:none;"/>
     </div>
 </div>
 </body>
