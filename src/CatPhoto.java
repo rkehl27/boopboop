@@ -4,44 +4,21 @@ import com.google.gson.annotations.SerializedName;
  * Created by rebeccakehl on 5/12/15.
  */
 public class CatPhoto {
-
     private String id;
-    @SerializedName("_id")
     private String photoDataId;
-    @SerializedName("width")
-    int width = 0;
-    @SerializedName("height")
-    int height = 0;
-    @SerializedName("noseX")
-    int noseX = 0;
-    @SerializedName("noseY")
-    int noseY = 0;
-    @SerializedName("xShift")
-    int xShift = 0;
-    @SerializedName("yShift")
-    int yShift = 0;
-    @SerializedName("URL")
-    String URL;
+    private int width = 0;
+    private int height = 0;
+    private int noseX = 0;
+    private int noseY = 0;
+    private int xShift = 0;
+    private int yShift = 0;
+    private String URL;
 
-    public CatPhoto(String id, String URL) {
-        this.id = id;
-        this.URL = URL;
-    }
-
-    public String getPhotoDataId() {
-        return photoDataId;
-    }
-
-    public void setPhotoDataId(String photoDataId) {
-        this.photoDataId = photoDataId;
+    public CatPhoto() {
     }
 
     public String getId() {
         return id;
-    }
-
-    public String getURL() {
-        return URL;
     }
 
     public void setId(String id) {
@@ -96,7 +73,19 @@ public class CatPhoto {
         this.yShift = yShift;
     }
 
+    public String getURL() {
+        return URL;
+    }
+
     public void setURL(String URL) {
         this.URL = URL;
+    }
+
+    public String getPhotoDataId() {
+        return photoDataId;
+    }
+
+    public void setPhotoDataId(String photoDataId) {
+        this.photoDataId = photoDataId;
     }
 }
