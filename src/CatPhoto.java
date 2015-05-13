@@ -23,6 +23,10 @@ public class CatPhoto {
     @SerializedName("URL")
     String URL;
 
+    public CatPhoto() {
+
+    }
+
     public CatPhoto(String id, String URL) {
         this.id = id;
         this.URL = URL;
