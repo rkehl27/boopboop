@@ -79,6 +79,7 @@ public class DBDriver {
     }
 
     public boolean insertCat(int width, int height, int noseX, int noseY, String URL) {
+        //Insert into CatPhotos
         ArrayList<Integer> noseArray = new ArrayList<>();
         noseArray.add(noseX);
         noseArray.add(noseY);
@@ -89,19 +90,82 @@ public class DBDriver {
 
         catPhotos.insertOne(photoDoc);
 
+        //Get Id from CatPhoto
         Document photoDocFromMongo = catPhotos.find(eq("URL", URL)).first();
         String photoString = photoDocFromMongo.toJson();
         Gson gson = new Gson();
         CatPhotoDoc catPhoto = gson.fromJson(photoString, CatPhotoDoc.class);
         String catPhotoId = catPhoto.getId();
 
-        Document dataDoc = new Document("photoId", catPhotoId)
-                .append("xShift", 0)
-                .append("yShift", 0)
-                .append("nose", noseArray);
+        double x2 = 0;
+        double y2 = 0;
+        double min = 0.00;
+        double max = 400.0;
 
-        photoData.insertOne(dataDoc);
+        //Calculate Shift
+        if (width > height) {
 
-        return false;
+            y2 = (max/(double)height) * (double)noseY;
+
+            double xmin = max - ((max/(double)height) * (double)(width-noseX));
+            double xmax = (max/(double)height)*(double)noseX;
+
+            double increment = (xmax - xmin)/10.0;
+
+            for (int i = 0; i <10 ; i++) {
+                x2 = noseX + increment;
+
+                if (x2 < min ) {
+                    x2 = min;
+                }
+                if (x2 > max) {
+                    x2 = max;
+                }
+
+                double xShift = ((max/(double) height) * (double) noseX) - x2;
+                double yShift = ((max/(double) width) * (double) noseY) - y2;
+
+                Document dataDoc = new Document("photoId", catPhotoId)
+                        .append("xShift", (int)xShift)
+                        .append("yShift", (int)yShift)
+                        .append("nose", noseArray);
+
+                photoData.insertOne(dataDoc);
+            }
+
+        } else if (height > width) {
+            x2 = (max/(double)width) * (double)noseX;
+
+            double ymin = max - ((max/(double)width) * (double)(height-noseY));
+            double ymax = (max/(double)width)*(double)noseY;
+
+            double increment = (ymax - ymin)/10.0;
+
+            for (int i = 0; i <10 ; i++) {
+                y2 = noseY + increment;
+
+                if (y2 < min ) {
+                    y2 = min;
+                }
+                if (y2 > max) {
+                    y2 = max;
+                }
+
+                double xShift = ((max/(double) height) * (double) noseX) - x2;
+                double yShift = ((max/(double) width) * (double) noseY) - y2;
+
+                Document dataDoc = new Document("photoId", catPhotoId)
+                        .append("xShift", (int)xShift)
+                        .append("yShift", (int)yShift)
+                        .append("nose", noseArray);
+
+                photoData.insertOne(dataDoc);
+            }
+
+        } else {
+            //height == width
+        }
+
+        return true;
     }
 }
