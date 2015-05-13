@@ -13,39 +13,28 @@ import org.bson.Document;
 import java.util.ArrayList;
 
 public class DBDriver {
+
+    private MongoClient mongoClient;
     private MongoCollection<Document> photoData;
     private MongoCollection<Document> catPhotos;
 
+    private static final Gson gson = new Gson();
+
     public DBDriver() {
-        MongoClient mongoClient = new MongoClient("localhost");
 
-        MongoDatabase database = mongoClient.getDatabase("");
+        mongoClient = new MongoClient("localhost");
+        MongoDatabase database = mongoClient.getDatabase("catboop");
 
-        photoData = database.getCollection("");
-        catPhotos = database.getCollection("");
+        photoData = database.getCollection("photoData");
+        catPhotos = database.getCollection("catPhotos");
+    }
+
+    public void close() {
+        mongoClient.close();
     }
 
     public CatPhoto getCat(int noseX, int noseY) {
         //Nearest neighbor search on photo data for noseX and noseY
-
-        /**
-         * String sLng = “15.5”;	Double dLng = new Double(sLng);
-         String sLat = “150.11”;	Double dLat = new Double(sLat);
-         String sDistance = “40”;
-         DBCursor cur = collectionUM.find(new BasicDBObject(“loc”,JSON.parse(“{$near : [ ” + dLng + “,” + dLat + ” ] , $maxDistance : ” + sDistance + “}”))).limit(10);
-         */
-
-        //        ArrayList<Integer> noseArray = new ArrayList<>();
-//        noseArray.add(noseX);
-//        noseArray.add(noseY);
-//
-//        BasicDBObject query = new BasicDBObject("$near", noseArray);
-//
-//        Document catPhoto = photoData.find(query).first();
-        Gson gson = new Gson();
-
-
-        //Nearest Neighbor query on PhotoData
         Double locationLongitude = new Double(noseY);
         Double locationLatitude = new Double(noseX);
 
@@ -61,111 +50,114 @@ public class DBDriver {
         CatPhotoDoc catPhotoDoc = gson.fromJson(catPhotoDocFromMongo.toJson(), CatPhotoDoc.class);
 
         //Joint Document
-        CatPhoto ultimateCatPhoto = new CatPhoto();
-
-        Integer[] noseArray = photoDataDoc.getNoseArray();
-        ultimateCatPhoto.setNoseX(noseArray[0]);
-        ultimateCatPhoto.setNoseY(noseArray[1]);
-
-        ultimateCatPhoto.setId(catPhotoDoc.getId());
-        ultimateCatPhoto.setPhotoDataId(photoDataDoc.getId());
-        ultimateCatPhoto.setWidth(catPhotoDoc.getWidth());
-        ultimateCatPhoto.setHeight(catPhotoDoc.getHeight());
-        ultimateCatPhoto.setxShift(photoDataDoc.getxShift());
-        ultimateCatPhoto.setyShift(photoDataDoc.getyShift());
-        ultimateCatPhoto.setURL(catPhotoDoc.getURL());
+        CatPhoto ultimateCatPhoto = new CatPhoto(catPhotoDoc, photoDataDoc);
 
         return ultimateCatPhoto;
     }
 
     public boolean insertCat(int width, int height, int noseX, int noseY, String URL) {
-        //Insert into CatPhotos
-        ArrayList<Integer> noseArray = new ArrayList<>();
-        noseArray.add(noseX);
-        noseArray.add(noseY);
-        Document photoDoc = new Document("width", width)
-                .append("height", height)
-                .append("oldNose", noseArray)
-                .append("URL", URL);
 
-        catPhotos.insertOne(photoDoc);
+        if (width <= 0 || height <= 0 || noseX < 0 || noseX >= width || noseY < 0 || noseY >= height || URL == null || URL == "")
+            return false;
 
-        //Get Id from CatPhoto
-        Document photoDocFromMongo = catPhotos.find(eq("URL", URL)).first();
-        String photoString = photoDocFromMongo.toJson();
-        Gson gson = new Gson();
-        CatPhotoDoc catPhoto = gson.fromJson(photoString, CatPhotoDoc.class);
-        String catPhotoId = catPhoto.getId();
+        try {
+            //Insert into CatPhotos
+            ArrayList<Integer> noseArray = new ArrayList<>();
+            noseArray.add(noseX);
+            noseArray.add(noseY);
+            Document photoDoc = new Document("width", width)
+                    .append("height", height)
+                    .append("oldNose", noseArray)
+                    .append("URL", URL);
 
-        double x2 = 0;
-        double y2 = 0;
-        double min = 0.00;
-        double max = 400.0;
+            catPhotos.insertOne(photoDoc);
 
-        //Calculate Shift
-        if (width > height) {
+            //Get Id from CatPhoto
+            Document photoDocFromMongo = catPhotos.find(eq("URL", URL)).first();
+            String photoString = photoDocFromMongo.toJson();
+            System.out.println("\n\nRetrieved document:\n\n" + photoString + "\n");
+            String newPhotoString = BoopUtil.jsonToCatPhoto(photoString);
+            System.out.println("Cleaned document:\n\n" + newPhotoString + "\n");
+            String catPhotoId = "5553bb35aa1eb28e8034bc49";
+            //CatPhotoDoc catPhoto = gson.fromJson(photoString, CatPhotoDoc.class); <- this fails because the _id is an ObjectId, not a string
+            //String catPhotoId = catPhoto.getId();
 
-            y2 = (max/(double)height) * (double)noseY;
+            double x2 = 0;
+            double y2 = 0;
+            double min = 0.00;
+            double max = 400.0;
 
-            double xmin = max - ((max/(double)height) * (double)(width-noseX));
-            double xmax = (max/(double)height)*(double)noseX;
+            //Calculate Shifts
+            if (width > height) {
 
-            double increment = (xmax - xmin)/10.0;
+                y2 = (max / (double) height) * (double) noseY;
 
-            for (int i = 0; i <10 ; i++) {
-                x2 = noseX + increment;
+                //Find range of x-values for nose within 400x400 frame
+                double xmin = max - ((max / (double) height) * (double) (width - noseX));
+                xmin = (xmin < min ? min : (xmin > max ? max : xmin));
+                double xmax = (max / (double) height) * (double) noseX;
+                xmax = (xmax < min ? min : (xmax > max ? max : xmax));
 
-                if (x2 < min ) {
-                    x2 = min;
+                //Insert photoData documents for 10 points in range
+                for (int i = 0; i < 10; i++) {
+                    x2 = xmin + (xmax - xmin) * i / 10.0;
+
+                    double xShift = ((max / (double) height) * (double) noseX) - x2;
+                    double yShift = 0;
+
+                    Document dataDoc = new Document("photoId", catPhotoId)
+                            .append("xShift", (int) xShift)
+                            .append("yShift", (int) yShift)
+                            .append("nose", noseArray);
+
+                    photoData.insertOne(dataDoc);
                 }
-                if (x2 > max) {
-                    x2 = max;
+
+            } else { //width <= height
+
+                x2 = (max / (double) width) * (double) noseX;
+
+                //Find range of y-values for nose within 400x400 frame
+                double ymin = max - ((max / (double) width) * (double) (height - noseY));
+                ymin = (ymin < min ? min : (ymin > max ? max : ymin));
+                double ymax = (max / (double) width) * (double) noseY;
+                ymax = (ymax < min ? min : (ymax > max ? max : ymax));
+
+                //Insert photoData documents for 10 points in range
+                for (int i = 0; i < 10; i++) {
+                    y2 = ymin + (ymax - ymin) * i / 10.0;
+
+                    double xShift = 0;
+                    double yShift = ((max / (double) width) * (double) noseY) - y2;
+
+                    Document dataDoc = new Document("photoId", catPhotoId)
+                            .append("xShift", (int) xShift)
+                            .append("yShift", (int) yShift)
+                            .append("nose", noseArray);
+
+                    photoData.insertOne(dataDoc);
                 }
 
-                double xShift = ((max/(double) height) * (double) noseX) - x2;
-                double yShift = ((max/(double) width) * (double) noseY) - y2;
-
-                Document dataDoc = new Document("photoId", catPhotoId)
-                        .append("xShift", (int)xShift)
-                        .append("yShift", (int)yShift)
-                        .append("nose", noseArray);
-
-                photoData.insertOne(dataDoc);
             }
-
-        } else if (height > width) {
-            x2 = (max/(double)width) * (double)noseX;
-
-            double ymin = max - ((max/(double)width) * (double)(height-noseY));
-            double ymax = (max/(double)width)*(double)noseY;
-
-            double increment = (ymax - ymin)/10.0;
-
-            for (int i = 0; i <10 ; i++) {
-                y2 = noseY + increment;
-
-                if (y2 < min ) {
-                    y2 = min;
-                }
-                if (y2 > max) {
-                    y2 = max;
-                }
-
-                double xShift = ((max/(double) height) * (double) noseX) - x2;
-                double yShift = ((max/(double) width) * (double) noseY) - y2;
-
-                Document dataDoc = new Document("photoId", catPhotoId)
-                        .append("xShift", (int)xShift)
-                        .append("yShift", (int)yShift)
-                        .append("nose", noseArray);
-
-                photoData.insertOne(dataDoc);
-            }
-
-        } else {
-            //height == width
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
 
         return true;
+    } //End insertCat()
+
+    public void test() {
+        MongoDatabase db = mongoClient.getDatabase("catboop");
+        for (String s : db.listCollectionNames())
+            System.out.println(s);
     }
+
+    public static void main(String[] args) {
+        DBDriver dbDriver = new DBDriver();
+        dbDriver.insertCat(500, 300, 100, 200, "photos/somecat.jpg");
+        dbDriver.close();
+        return;
+    }
+
 }

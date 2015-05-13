@@ -2,15 +2,21 @@
  * Created by Parker on 5/12/2015.
  */
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 
 public class CatImporter {
 
-    private static final String catPath = "C:/Users/Parker/Documents/BigData/catphotos";
+    public static final String catPath = "src/main/resources/public/photos";
+    private static DBDriver dbDriver;
 
     public static void main(String[] args) {
+        dbDriver = new DBDriver();
         importCats(catPath);
+        dbDriver.close();
     } //End main()
 
     public static int importCats(String folderPath) {
@@ -38,19 +44,51 @@ public class CatImporter {
                 if (f.isDirectory())
                     total = recursiveImportCats(f, total, tab + 1);
                 else if (f.getName().endsWith(".jpg.cat")) {
-                    ntabs(tab + 1, "Found cat " + f.getName().substring(0, f.getName().indexOf('.')) + "!");
+                    //ntabs(tab + 1, "Found cat " + f.getName().substring(0, f.getName().indexOf('.')) + "!");
+                    importCat(folder, f);
                     total++;
                 }
             }
         }
         return total;
 
-    } //End recursiveImportCats
+    } //End recursiveImportCats()
+
+    private static void importCat(File folder, File aFile) {
+
+        //Find .jpg file from .jpg.cat file
+        String pFilename = aFile.getName().substring(0, aFile.getName().indexOf(".cat"));
+        File pFile = new File(folder, pFilename);
+        String URL = folder.getName() + "/" + pFile.getName();
+
+        try {
+            //Read image width/height
+            BufferedImage bImg = ImageIO.read(pFile);
+            int width = bImg.getWidth();
+            int height = bImg.getHeight();
+
+            //Read annotation data
+            String[] annotations = BoopUtil.serveFlatFile(aFile.getPath()).split(" ");
+            int noseX = Integer.parseInt(annotations[5]);
+            int noseY = Integer.parseInt(annotations[6]);
+
+            System.out.println("W,H: " + width + ", " + height + " X,Y: " + noseX + ", " + noseY + " URL: " + URL);
+            //Insert cat
+            boolean b = dbDriver.insertCat(width, height, noseX, noseY, URL);
+            if (!b)
+                System.out.println("Insertion of cat '" + URL + "' failed.");
+
+        } catch (IOException e) {
+            System.out.println("Error with photo '" + pFile.getPath() + "':");
+            e.printStackTrace();
+            return;
+        }
+    } //End importCat()
 
     private static void ntabs(int tab, String message) {
         for (int i = 0; i < tab; ++i)
             System.out.print("  ");
         System.out.println(message);
-    }
+    } //End ntabs()
 
 } //End class CatImporter

@@ -20,7 +20,7 @@ public class BoopUtil {
             Scanner in = new Scanner(s);
 
             while (in.hasNext()) {
-                page += in.nextLine() + "\n";
+                page += in.nextLine() + (in.hasNext() ? "\n" : "");
             }
             in.close();
             s.close();
@@ -30,6 +30,13 @@ public class BoopUtil {
         }
         return page;
     } //End serveFlatFile()
+
+    public static String jsonToCatPhoto(String json) {
+        json = json.replace("_id", "id");
+        json = json.replace("\\{ \"\\$oid\" ", "");
+        json = json.replaceFirst("\\} ", "");
+        return json;
+    }
 
     public static String toJson(Object object) {
         return new Gson().toJson(object);

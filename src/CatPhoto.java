@@ -24,12 +24,24 @@ public class CatPhoto {
     String URL;
 
     public CatPhoto() {
-
+        //Set nothing
     }
 
     public CatPhoto(String id, String URL) {
         this.id = id;
         this.URL = URL;
+    }
+
+    public CatPhoto(CatPhotoDoc cpDoc, PhotoDataDoc pdDoc) {
+        this.id = cpDoc.getId();
+        this.photoDataId = pdDoc.getId();
+        this.width = cpDoc.getWidth();
+        this.height = cpDoc.getHeight();
+        this.xShift = pdDoc.getxShift();
+        this.yShift = pdDoc.getyShift();
+        this.URL = cpDoc.getURL();
+        this.noseX = pdDoc.getNoseArray()[0];
+        this.noseY = pdDoc.getNoseArray()[1];
     }
 
     public String getPhotoDataId() {
