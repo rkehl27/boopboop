@@ -1,0 +1,35 @@
+body {
+    background-color:#333F40;
+}
+
+h1 {
+    color:#DDDDF0;
+    font-family:"Trebuchet MS", sans-serif;
+    font-style:normal;
+    text-align:center;
+}
+
+h3 {
+    color:#DDDDF0;
+    font: 14px "Trebuchet MS", sans-serif;
+    font-style:normal;
+    text-align:center;
+    line-height:120%;
+}
+
+#outer {
+    width:100%;
+    margin:10px 0px;
+}
+
+#catFrame {
+    width:400px;
+    height:400px;
+    overflow:hidden;
+    margin:0px auto;
+    border:1px dashed #DDDDF0;
+}
+
+#catImg {
+    display:none;
+}
