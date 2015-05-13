@@ -4,6 +4,6 @@ To create the project on your machine, pull down the project and then use Intell
 
 Make sure to go into Project Structure and add the following Maven libraries. 
 
-org.mongodb:mongo-java-driver:3.0.0
-com.sparkjava:spark-core:2.1
-com.google.code.gson:gson:2.2.4
+1. org.mongodb:mongo-java-driver:3.0.0
+2. com.sparkjava:spark-core:2.1
+3. com.google.code.gson:gson:2.2.4
