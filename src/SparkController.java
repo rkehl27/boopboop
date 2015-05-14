@@ -23,17 +23,9 @@ public class SparkController {
             int clickX = Integer.parseInt(xy.split(",")[0]);
             int clickY = Integer.parseInt(xy.split(",")[1]);
 
-            //CatPhoto cp = new CatPhoto("1234", "http://tonsofcats.com/wp-content/uploads/2013/10/l-Derpy-aww-550x486.jpg");
             DBDriver dbDriver = new DBDriver();
             CatPhoto cp = dbDriver.getCat(clickX, clickY);
             dbDriver.close();
-
-            /*cp.setWidth(550);
-            cp.setHeight(486);
-            cp.setNoseX(clickX);
-            cp.setNoseY(clickY);
-            cp.setxShift(246 - clickX);
-            cp.setyShift(158 - clickY);*/
 
             return cp;
         }, BoopUtil.json());
