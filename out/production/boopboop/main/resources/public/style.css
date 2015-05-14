@@ -1,4 +1,6 @@
 body {
+    background-image:url('catboop_bg.png');
+    background-repeat:repeat;
     background-color:#333F40;
 }
 
@@ -28,6 +30,7 @@ h3 {
     overflow:hidden;
     margin:0px auto;
     border:1px dashed #DDDDF0;
+    cursor:pointer;
 }
 
 #catImg {

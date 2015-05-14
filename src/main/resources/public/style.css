@@ -1,4 +1,6 @@
 body {
+    background-image:url('catboop_bg.png');
+    background-repeat:repeat;
     background-color:#333F40;
 }
 

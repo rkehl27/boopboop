@@ -32,9 +32,22 @@ app.controller('imgCtrl', function($scope, $http) {
 	};
 
 	$scope.displayCatPhoto = function(catImg, cat) {
-		catImg.style.display = "block";
+		catImg.style.display = "none";
+		catImg.onload = function() {
+			if( cat.width > cat.height ) {
+				this.style.height = "100%";
+				this.style.width = "";
+				this.style.margin = "0px " + (-cat.xShift) + "px";
+			}
+			else {
+				this.style.height = "";
+				this.style.width = "100%";
+				this.style.margin = (-cat.yShift) + "px 0px";
+			}
+			this.style.display = "block";
+		}
 		catImg.src = cat.URL;
-		if( cat.width > cat.height ) {
+		/*if( cat.width > cat.height ) {
 			catImg.style.height = "100%";
 			catImg.style.width = "";
 			catImg.style.margin = "0px " + (-cat.xShift) + "px";
@@ -43,7 +56,7 @@ app.controller('imgCtrl', function($scope, $http) {
 			catImg.style.height = "";
 			catImg.style.width = "100%";
 			catImg.style.margin = (-cat.yShift) + "px 0px";
-		}
+		}*/
 	};
 
 });
