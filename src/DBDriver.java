@@ -30,6 +30,7 @@ public class DBDriver {
         MongoDatabase database = mongoClient.getDatabase("catboop");
 
         photoData = database.getCollection("photoData");
+        photoData.createIndex(new BasicDBObject("nose", "2d"));
         catPhotos = database.getCollection("catPhotos");
     }
 
