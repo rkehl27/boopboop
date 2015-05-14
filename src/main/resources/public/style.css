@@ -19,9 +19,15 @@ h3 {
     line-height:120%;
 }
 
+a {
+    color:#DDDDF0;
+    font: 12px "Trebuchet MS", sans-serif;
+}
+
 #outer {
     width:100%;
     margin:10px 0px;
+    text-align:center;
 }
 
 #catFrame {
@@ -33,6 +39,27 @@ h3 {
     cursor:pointer;
 }
 
+#submitFrame {
+    width:400px;
+    height:400px;
+    margin:0px auto;
+    border:1px dashed #DDDDF0;
+}
+
 #catImg {
     display:none;
+}
+
+#submitImg {
+    display:none;
+    cursor:pointer;
+}
+
+#submitURLdiv {
+    margin:190px auto;
+}
+
+#submitURL {
+    width:250px;
+    margin:0px 10px 0px 30px;
 }

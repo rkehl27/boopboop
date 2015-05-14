@@ -13,6 +13,9 @@ import static com.mongodb.client.model.Filters.*;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -67,8 +70,10 @@ public class DBDriver {
 
     public boolean insertCat(int width, int height, int noseX, int noseY, String URL) {
 
-        if (width <= 0 || height <= 0 || noseX < 0 || noseX >= width || noseY < 0 || noseY >= height || URL == null || URL == "")
+        if (width <= 0 || height <= 0 || noseX < 0 || noseX >= width || noseY < 0 || noseY >= height || URL == null || URL == "") {
+            System.out.println("Arguments to insertCat failed");
             return false;
+        }
 
         try {
             //Insert into CatPhotos
@@ -166,18 +171,40 @@ public class DBDriver {
         return true;
     } //End insertCat()
 
-    public void test() {
-        MongoDatabase db = mongoClient.getDatabase("catboop");
-        for (String s : db.listCollectionNames())
-            System.out.println(s);
-    }
-
     public static void main(String[] args) {
         DBDriver dbDriver = new DBDriver();
-        CatPhoto cp = dbDriver.getCat(200, 200);
-        System.out.println(gson.toJson(cp));
+        dbDriver.exportPointList("C:\\Users\\Parker\\Documents\\BigData\\pointlist.csv");
         dbDriver.close();
         return;
+    }
+
+    private void exportPointList(String filepath) {
+        try {
+            String pointlist = "";
+            FindIterable<Document> results = photoData.find();
+            MongoCursor<Document> cursor = results.iterator();
+            int i = 0;
+            System.out.print("Reading points");
+            while (cursor.hasNext()) {
+                Document pdDoc = cursor.next();
+                ArrayList<Double> arr = (ArrayList<Double>) pdDoc.get("nose");
+                pointlist += ((int) (arr.get(0) * 10.0)) + "," + ((int) (arr.get(1) * 10.0)) + (cursor.hasNext() ? "\n" : "");
+                i++;
+                if (i % 720 == 0)
+                    System.out.print(".");
+            }
+
+            File f = new File(filepath);
+            if (!f.exists())
+                f.createNewFile();
+            FileWriter fw = new FileWriter(f);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(pointlist);
+            bw.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

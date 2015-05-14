@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link rel="stylesheet" type="text/css" href="style.css"/>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+    <script src="js/angular-resource.js"></script>
+    <script src="app.js"></script>
+    <title>Catboop - Submit a Cat</title>
+</head>
+<body>
+<h1>CATBOOP</h1>
+
+<h3 id="h3instr">Copy the URL to your photo below:</h3>
+
+<div id="outer" ng-app="catboop" ng-controller="submitCtrl">
+    <div id="submitFrame">
+        <img id="submitImg"/>
+
+        <div id="submitURLdiv"><input type="text" id="submitURL"/>
+            <button id="updateURLbtn">Find Cat</button>
+        </div>
+    </div>
+    <p><a href="index.html">Return to booping</a></p>
+</div>
+</body>
+</html>
