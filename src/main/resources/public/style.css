@@ -28,6 +28,7 @@ h3 {
     overflow:hidden;
     margin:0px auto;
     border:1px dashed #DDDDF0;
+    cursor:pointer;
 }
 
 #catImg {

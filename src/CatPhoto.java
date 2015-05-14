@@ -1,12 +1,15 @@
 
 import com.google.gson.annotations.SerializedName;
+import org.bson.Document;
+
+import java.util.ArrayList;
 
 /**
  * Created by rebeccakehl on 5/12/15.
  */
 public class CatPhoto {
     private String id;
-    @SerializedName("_id")
+    @SerializedName("photoDataId")
     private String photoDataId;
     @SerializedName("width")
     int width = 0;
@@ -32,16 +35,17 @@ public class CatPhoto {
         this.URL = URL;
     }
 
-    public CatPhoto(CatPhotoDoc cpDoc, PhotoDataDoc pdDoc) {
-        this.id = cpDoc.getId();
-        this.photoDataId = pdDoc.getId();
-        this.width = cpDoc.getWidth();
-        this.height = cpDoc.getHeight();
-        this.xShift = pdDoc.getxShift();
-        this.yShift = pdDoc.getyShift();
-        this.URL = cpDoc.getURL();
-        this.noseX = pdDoc.getNoseArray()[0];
-        this.noseY = pdDoc.getNoseArray()[1];
+    public CatPhoto(Document cpDoc, Document pdDoc) {
+        this.id = cpDoc.get("_id").toString();
+        this.photoDataId = pdDoc.get("_id").toString();
+        this.width = (Integer) cpDoc.get("width");
+        this.height = (Integer) cpDoc.get("height");
+        this.xShift = (Integer) pdDoc.get("xShift");
+        this.yShift = (Integer) pdDoc.get("yShift");
+        this.URL = cpDoc.get("URL").toString();
+        ArrayList<Double> noseArray = (ArrayList<Double>) pdDoc.get("nose");
+        this.noseX = (int) (noseArray.get(0).doubleValue() * 10.0);
+        this.noseY = (int) (noseArray.get(1).doubleValue() * 10.0);
     }
 
     public String getPhotoDataId() {

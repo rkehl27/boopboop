@@ -32,8 +32,7 @@ public class BoopUtil {
     } //End serveFlatFile()
 
     public static String jsonToCatPhoto(String json) {
-        json = json.replace("_id", "id");
-        json = json.replace("\\{ \"\\$oid\" ", "");
+        json = json.replace("\\{", "");
         json = json.replaceFirst("\\} ", "");
         return json;
     }

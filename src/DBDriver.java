@@ -9,6 +9,7 @@ import com.mongodb.client.MongoDatabase;
 
 import static com.mongodb.client.model.Filters.*;
 import org.bson.Document;
+import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 
@@ -35,22 +36,18 @@ public class DBDriver {
 
     public CatPhoto getCat(int noseX, int noseY) {
         //Nearest neighbor search on photo data for noseX and noseY
-        Double locationLongitude = new Double(noseY);
-        Double locationLatitude = new Double(noseX);
+        Double locationLongitude = new Double((double) noseY / 10.0);
+        Double locationLatitude = new Double((double) noseX / 10.0);
 
-        BasicDBObject query = new BasicDBObject("$near", new Double[]{locationLongitude, locationLatitude});
+        BasicDBObject query = new BasicDBObject("nose", new BasicDBObject("$near", new Double[]{locationLatitude, locationLongitude}));
         Document photoDataDocument = photoData.find(query).first();
-
-        //Document from PhotoData
-        PhotoDataDoc photoDataDoc = gson.fromJson(photoDataDocument.toJson(), PhotoDataDoc.class);
-        String catPhotoId = photoDataDoc.getCatPhotoId();
+        String catPhotoId = photoDataDocument.get("photoId").toString();
 
         //Document from CatPhoto
-        Document catPhotoDocFromMongo = catPhotos.find(eq("_id",catPhotoId )).first();
-        CatPhotoDoc catPhotoDoc = gson.fromJson(catPhotoDocFromMongo.toJson(), CatPhotoDoc.class);
+        Document catPhotoDocFromMongo = catPhotos.find(eq("_id", new ObjectId(catPhotoId))).first();
 
         //Joint Document
-        CatPhoto ultimateCatPhoto = new CatPhoto(catPhotoDoc, photoDataDoc);
+        CatPhoto ultimateCatPhoto = new CatPhoto(catPhotoDocFromMongo, photoDataDocument);
 
         return ultimateCatPhoto;
     }
@@ -62,30 +59,26 @@ public class DBDriver {
 
         try {
             //Insert into CatPhotos
-            ArrayList<Integer> noseArray = new ArrayList<>();
-            noseArray.add(noseX);
-            noseArray.add(noseY);
+            ArrayList<Integer> oldNoseArray = new ArrayList<>();
+            oldNoseArray.add(noseX);
+            oldNoseArray.add(noseY);
             Document photoDoc = new Document("width", width)
                     .append("height", height)
-                    .append("oldNose", noseArray)
+                    .append("oldNose", oldNoseArray)
                     .append("URL", URL);
 
             catPhotos.insertOne(photoDoc);
 
             //Get Id from CatPhoto
             Document photoDocFromMongo = catPhotos.find(eq("URL", URL)).first();
-            String photoString = photoDocFromMongo.toJson();
-            System.out.println("\n\nRetrieved document:\n\n" + photoString + "\n");
-            String newPhotoString = BoopUtil.jsonToCatPhoto(photoString);
-            System.out.println("Cleaned document:\n\n" + newPhotoString + "\n");
-            String catPhotoId = "5553bb35aa1eb28e8034bc49";
-            //CatPhotoDoc catPhoto = gson.fromJson(photoString, CatPhotoDoc.class); <- this fails because the _id is an ObjectId, not a string
-            //String catPhotoId = catPhoto.getId();
+            String catPhotoId = photoDocFromMongo.get("_id").toString();
 
             double x2 = 0;
             double y2 = 0;
             double min = 0.00;
             double max = 400.0;
+            //Shifted copies of the same photo will have between minSpacing and 2*minSpacing pixels between them
+            double minSpacing = 20.0;
 
             //Calculate Shifts
             if (width > height) {
@@ -98,12 +91,18 @@ public class DBDriver {
                 double xmax = (max / (double) height) * (double) noseX;
                 xmax = (xmax < min ? min : (xmax > max ? max : xmax));
 
+                int nPts = (int) ((xmax - xmin) / minSpacing);
+                nPts = (nPts < 2 ? 2 : nPts);
+
                 //Insert photoData documents for 10 points in range
-                for (int i = 0; i < 10; i++) {
-                    x2 = xmin + (xmax - xmin) * i / 10.0;
+                for (int i = 0; i <= nPts; i++) {
+                    x2 = xmin + (xmax - xmin) * i / (double) nPts;
 
                     double xShift = ((max / (double) height) * (double) noseX) - x2;
                     double yShift = 0;
+                    ArrayList<Double> noseArray = new ArrayList<>();
+                    noseArray.add(x2 / 10.0); //Scale down by 10 to fit within latitude/longitude coordinate system
+                    noseArray.add(y2 / 10.0);
 
                     Document dataDoc = new Document("photoId", catPhotoId)
                             .append("xShift", (int) xShift)
@@ -123,12 +122,18 @@ public class DBDriver {
                 double ymax = (max / (double) width) * (double) noseY;
                 ymax = (ymax < min ? min : (ymax > max ? max : ymax));
 
+                int nPts = (int) ((ymax - ymin) / minSpacing);
+                nPts = (nPts < 2 ? 2 : nPts);
+
                 //Insert photoData documents for 10 points in range
-                for (int i = 0; i < 10; i++) {
-                    y2 = ymin + (ymax - ymin) * i / 10.0;
+                for (int i = 0; i < nPts; i++) {
+                    y2 = ymin + (ymax - ymin) * i / nPts;
 
                     double xShift = 0;
                     double yShift = ((max / (double) width) * (double) noseY) - y2;
+                    ArrayList<Double> noseArray = new ArrayList<>();
+                    noseArray.add(x2 / 10.0);
+                    noseArray.add(y2 / 10.0);
 
                     Document dataDoc = new Document("photoId", catPhotoId)
                             .append("xShift", (int) xShift)
@@ -141,6 +146,7 @@ public class DBDriver {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("ERROR");
             return false;
         }
 
@@ -155,7 +161,8 @@ public class DBDriver {
 
     public static void main(String[] args) {
         DBDriver dbDriver = new DBDriver();
-        dbDriver.insertCat(500, 300, 100, 200, "photos/somecat.jpg");
+        CatPhoto cp = dbDriver.getCat(200, 200);
+        System.out.println(gson.toJson(cp));
         dbDriver.close();
         return;
     }

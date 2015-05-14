@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class CatImporter {
 
-    public static final String catPath = "src/main/resources/public/photos";
+    public static final String catPath = "src/main/resources/public";
     private static DBDriver dbDriver;
 
     public static void main(String[] args) {
@@ -59,7 +59,10 @@ public class CatImporter {
         //Find .jpg file from .jpg.cat file
         String pFilename = aFile.getName().substring(0, aFile.getName().indexOf(".cat"));
         File pFile = new File(folder, pFilename);
-        String URL = folder.getName() + "/" + pFile.getName();
+        String URL = pFile.getPath();
+        URL = URL.substring(catPath.length() + 1);
+        //System.out.println(URL);
+
 
         try {
             //Read image width/height
@@ -72,7 +75,7 @@ public class CatImporter {
             int noseX = Integer.parseInt(annotations[5]);
             int noseY = Integer.parseInt(annotations[6]);
 
-            System.out.println("W,H: " + width + ", " + height + " X,Y: " + noseX + ", " + noseY + " URL: " + URL);
+            //System.out.println("W,H: " + width + ", " + height + " X,Y: " + noseX + ", " + noseY + " URL: " + URL);
             //Insert cat
             boolean b = dbDriver.insertCat(width, height, noseX, noseY, URL);
             if (!b)
