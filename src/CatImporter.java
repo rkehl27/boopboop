@@ -63,24 +63,31 @@ public class CatImporter {
         URL = URL.substring(catPath.length() + 1);
         //System.out.println(URL);
 
-
         try {
             //Read image width/height
-            BufferedImage bImg = ImageIO.read(pFile);
-            int width = bImg.getWidth();
-            int height = bImg.getHeight();
-
-            //Read annotation data
-            String[] annotations = BoopUtil.serveFlatFile(aFile.getPath()).split(" ");
-            int noseX = Integer.parseInt(annotations[5]);
-            int noseY = Integer.parseInt(annotations[6]);
+            BufferedImage bImg = null;
+            try {
+                bImg = ImageIO.read(pFile);
+            } catch(IllegalArgumentException e) {
+                System.out.println("Error with reading photo '" + pFile.getPath() + "':");
+                e.printStackTrace();
+//                return;
+            }
 
             //System.out.println("W,H: " + width + ", " + height + " X,Y: " + noseX + ", " + noseY + " URL: " + URL);
             //Insert cat
-            boolean b = dbDriver.insertCat(width, height, noseX, noseY, URL);
-            if (!b)
-                System.out.println("Insertion of cat '" + URL + "' failed.");
+            if (bImg != null) {
+                int width = bImg.getWidth();
+                int height = bImg.getHeight();
+                //Read annotation data
+                String[] annotations = BoopUtil.serveFlatFile(aFile.getPath()).split(" ");
+                int noseX = Integer.parseInt(annotations[5]);
+                int noseY = Integer.parseInt(annotations[6]);
 
+                boolean b = dbDriver.insertCat(width, height, noseX, noseY, URL);
+                if (!b)
+                    System.out.println("Insertion of cat '" + URL + "' failed.");
+            }
         } catch (IOException e) {
             System.out.println("Error with photo '" + pFile.getPath() + "':");
             e.printStackTrace();
