@@ -4,7 +4,9 @@
 
 import com.google.gson.Gson;
 import com.mongodb.*;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 
 import static com.mongodb.client.model.Filters.*;
@@ -12,6 +14,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 public class DBDriver {
 
@@ -40,7 +43,16 @@ public class DBDriver {
         Double locationLatitude = new Double((double) noseX / 10.0);
 
         BasicDBObject query = new BasicDBObject("nose", new BasicDBObject("$near", new Double[]{locationLatitude, locationLongitude}));
-        Document photoDataDocument = photoData.find(query).first();
+        FindIterable<Document> photoDataDocuments = photoData.find(query).limit(10);
+        MongoCursor<Document> cursor = photoDataDocuments.iterator();
+        Random rand = new Random();
+        int pickedNumber = rand.nextInt(10);
+        for (int i=0; i<pickedNumber; i++) {
+            cursor.next();
+        }
+        Document photoDataDocument = cursor.next();
+
+        //Document photoDataDocument = photoData.find(query).first();
         String catPhotoId = photoDataDocument.get("photoId").toString();
 
         //Document from CatPhoto
